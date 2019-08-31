@@ -7,6 +7,10 @@ class vec{
   public vec(float mx, float my){
     x = mx; y = my;
   }
+  public vec(vec mvec){
+    x = mvec.x;
+    y = mvec.y;
+  }
   public vec(){
     x = 0.0f;
     y = 0.0f;
@@ -16,6 +20,7 @@ class vec{
     x += input.x;
     y += input.y;
   }
+
   
   vec to(vec input){
     return new vec(input.x - x, input.y - y);
@@ -35,6 +40,20 @@ class vec{
   
   vec scaley(float dy){
     return this.setmag(dy * this.mag() / this.y);
+  }
+  
+  vec rotate(float rot){
+    return new vec(
+      x * cos(rot) - y * sin(rot),
+      x * sin(rot) + y * cos(rot));
+  }
+  
+  vec scalemag(float mag){
+    return setmag(mag() * mag);
+  }
+  
+  float speed(){
+    return mag() * fps;
   }
   
   

@@ -18,4 +18,13 @@ class body{ //class for planets
     return dir;
   }
   
+  vec attract(simrocket obj, float skip){ // returns vector in direction of planet from object with magnitude of gravity
+    vec dir = obj.pos.to(this.pos);
+    float mag = gconst * ((mass * obj.mass) / pow(pos.distto(obj.pos), 2));
+    mag /= obj.mass;
+    mag /= fps;
+    dir = dir.setmag(mag);
+    return dir;
+  }
+  
 }
