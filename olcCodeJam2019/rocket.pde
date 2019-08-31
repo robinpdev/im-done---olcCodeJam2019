@@ -19,7 +19,9 @@ class rocket{
   void update(){
     //println(planet.attract(this).mag());
     heading.add(planet.attract(this));
-    pos.add(heading);
+    if(pos.mag() > planetrad + 34){
+      pos.add(heading);
+    }
   }
   
   void prender(){
