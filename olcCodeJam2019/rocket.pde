@@ -17,7 +17,8 @@ class rocket{
   }
   
   void update(){
-    
+    //println(planet.attract(this).mag());
+    heading.add(planet.attract(this));
     pos.add(heading);
   }
   
@@ -26,8 +27,8 @@ class rocket{
   }
   void render(){
     pushMatrix();
-      translate(-sprite.width / 2 , -sprite.height / 2);
-      image(sprite, 0, 0);
+      translate(-sprdim.x / 2 , -sprdim.y / 2);
+      image(sprite, 0, 0, sprdim.x, sprdim.y);
     popMatrix();
   }
   

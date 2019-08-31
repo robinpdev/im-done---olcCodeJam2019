@@ -11,8 +11,10 @@ class body{ //class for planets
   
   vec attract(rocket obj){ // returns vector in direction of planet from object with magnitude of gravity
     vec dir = obj.pos.to(this.pos);
-    final float mag = gconst * mass * obj.mass / pos.distto(obj.pos);
-    dir.setmag(mag);
+    float mag = gconst * ((mass * obj.mass) / pow(pos.distto(obj.pos), 2));
+    mag /= obj.mass;
+    mag /= fps;
+    dir = dir.setmag(mag);
     return dir;
   }
   

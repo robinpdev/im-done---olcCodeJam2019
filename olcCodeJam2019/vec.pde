@@ -33,6 +33,10 @@ class vec{
     return new vec(x / this.mag() * mag, y / this.mag() * mag);
   }
   
+  vec scaley(float dy){
+    return this.setmag(dy * this.mag() / this.y);
+  }
+  
   
   
 }
