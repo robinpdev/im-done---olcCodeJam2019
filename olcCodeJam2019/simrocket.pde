@@ -1,6 +1,6 @@
 
 
-class simrocket{
+public class simrocket{ //simulated object for predicting path
   vec pos;
   vec heading;
   float mass;
@@ -11,16 +11,16 @@ class simrocket{
     mass = new java.lang.Float(old.mass);
   }
   
-  void update(float skip){
+  public boolean update(float skip){
 
     //gravity of planet
-    heading.add(planet.attract(this, skip).scalemag(skip));
+    this.heading.add(planet.attract(this, skip).scalemag(skip));
     
     // to not fall through planet
-    if(pos.mag() > planetrad + 34){ 
-      pos.add(heading.scalemag(skip));
-    }else{
-      heading = new vec(0, 0);
-    }
+    if(this.pos.mag() > planetrad + 34){ 
+      this.pos.add(this.heading.scalemag(skip));
+      return false;
+    }else{return true; }
+
   }
 }

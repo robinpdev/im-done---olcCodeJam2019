@@ -56,16 +56,9 @@ class rocket{
     //gravity of planet
     heading.add(planet.attract(this).scalemag(skip));
     
-    //thrust
-    if(thruston){
-      float force = thrust;
-      vec effect = new vec(0, force).rotate(rotation);
-      heading.add(effect);
-    }
-    
     // to not fall through planet
-    if(pos.mag() > planetrad + 34 || thruston){ 
-      pos.add(heading);
+    if(pos.mag() > planetrad + 34){ 
+      pos.add(heading.scalemag(skip));
     }else{
       heading = new vec(0, 0);
     }
@@ -94,10 +87,12 @@ class rocket{
   void predictpath(){
     path = new ArrayList<vec>();
     simrocket simroc = new simrocket(this);
-    for(int i = 0; i < 100; i ++){
-      simroc.update(50);
+    boolean done = false;
+    for(int i = 0; i < 100 && !done; i ++){
+      done = simroc.update(predskip);
       path.add(new vec(simroc.pos));
     }
+    println(path.size());
   }
   
   void showpath(){
@@ -106,6 +101,7 @@ class rocket{
       stroke(255, 0, 0);
       strokeWeight(1 / scale);
       beginShape();
+      vertex(pos.x, pos.y);
       for(int i = 0; i < path.size(); i ++){ 
         vec p = path.get(i);
         vertex(p.x, p.y);

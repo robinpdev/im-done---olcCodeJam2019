@@ -9,7 +9,9 @@ final float planetmass = 0.800e22;  //mass of planet
 
 final float gconst = 6.674e-11; // the real gravitational constant of the universe;
 final int fps = 30;
-int frameskip = 1;
+int frameskip = 1; //number of frames skipped for time warping
+int predskip = 100; //number of frames skipped for predicting path
+boolean predictjob = false;
 
 float thrust = 0.1f;
 
@@ -60,7 +62,8 @@ void draw(){
 int rot = 0; //rotation status: -1: ccw, 1: cw
 void keyPressed(){
   if(key == ' '){
-    roc.thruston = true;}
+    roc.thruston = true;
+    predictjob = true;}
   else if(key == 'e'){
     rot = 1;}
   else if(key == 'a'){
@@ -69,13 +72,35 @@ void keyPressed(){
 
 void keyReleased(){
   if(key == ' '){
-    roc.thruston = false;}
+    roc.thruston = false;
+    roc.predictpath();
+    predictjob = false;}
   else if(key == 'e' || key == 'a'){
     rot = 0;}
+    
+  else if(key == CODED){
+    if(keyCode == RIGHT){
+      frameskip *= 5;
+      println(frameskip);}
+    else if(keyCode == LEFT && frameskip >= 5){
+      frameskip /= 5;
+      println(frameskip);}
+  }
 }
 
 void gameupdate(){
-  roc.update();
+  if(frameskip == 1){
+    roc.update();
+  }else{
+    roc.update(frameskip);
+  }
+}
+
+void drawatm(){
+  int incr = 500;
+  for(int h = 0; h <= 60000; i += incr){
+    
+  }
 }
 
 void mouseWheel(MouseEvent event) { // for zooming
