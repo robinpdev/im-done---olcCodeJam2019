@@ -18,6 +18,7 @@ final float gconst = 6.674e-11; // the real gravitational constant of the univer
 float thrust = 6f / fps;
 
 PImage skybox;
+PImage earf;
 
 boolean attach = true;
 
@@ -33,6 +34,7 @@ void setup(){
   bom = new object(new vec(), 50000, "/res/bomb.png");
   bom.sprdim = bom.sprdim.scaley(20.0);
   skybox = loadImage("/res/skybox.png");
+  earf = loadImage("res/earf.png");
 }
 
 void draw(){
@@ -61,12 +63,26 @@ void draw(){
   ellipse(bom.pos.x, bom.pos.y, 100, 100); }
   
   //drawing planet and atmoshphere
-  noStroke(); fill(24, 207, 181);
+  /*noStroke(); fill(24, 207, 181);
   ellipse(0, 0, planetrad * 2, planetrad * 2); // planet
   stroke(255);
   strokeWeight(1);
   line(0, 0, 0, planetrad);
-  line(10, planetrad, 10, planetrad + 70);
+  line(10, planetrad, 10, planetrad + 70);*/
+  if(scale < 0.002){
+    pushMatrix();
+    translate(-planetrad, -planetrad);
+    image(earf, 0,  0, planetrad * 2.006, planetrad * 2.006);
+    popMatrix();
+  }else{
+    noStroke(); fill(132, 180, 81);
+    ellipse(0, 0, planetrad * 2, planetrad * 2); // planet
+    stroke(255);
+    strokeWeight(1);
+    line(0, 0, 0, planetrad);
+    line(10, planetrad, 10, planetrad + 70);
+  }
+  
   
   popMatrix();
   
@@ -98,6 +114,7 @@ void detach(){
   vec adpos = new vec(0, roc.sprdim.y / 2 + bom.sprdim.y / 2).rotate(roc.rotation) ;
   bom.pos.add(adpos);
   bom.heading = new vec(roc.heading);
+  bom.heading = bom.heading.setmag(bom.heading.mag() + 5);
   bom.rotation = new Float(roc.rotation);
   bom.rotheading = roc.rotheading;
   
@@ -147,10 +164,7 @@ void keyReleased(){
 void gameupdate(){
   if(frameskip == 1){
     roc.update();
-    if(!attach){ bom.update();
-    println(bom.pos.x);
-    println(bom.pos.y);
-    println();}
+    if(!attach){ bom.update(); }
   }else{
     roc.update(frameskip);
     if(!attach){ bom.update(frameskip); }

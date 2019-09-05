@@ -20,6 +20,13 @@ class vec{
     x += input.x;
     y += input.y;
   }
+  
+  vec addv(vec input){
+    vec out = new vec(this);
+    out.x += input.x;
+    out.y += input.y;
+    return out;
+  }
 
   
   vec to(vec input){

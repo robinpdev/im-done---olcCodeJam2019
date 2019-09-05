@@ -16,7 +16,7 @@ class rocket{
   public rocket(vec mpos, float mmass){
     pos = mpos;
     heading = new vec();
-    sprite = loadImage("/res/rbody.png");
+    sprite = loadImage("/res/rbodyg.png");
     sprdim = new vec(sprite.width, sprite.height);
     mass = mmass;
     rotation = 0f;
@@ -45,7 +45,7 @@ class rocket{
     }
     
     // to not fall through planet
-    if(pos.mag() > planetrad + 35 || thruston){ 
+    if(pos.mag() > planetrad + 35 || (thruston && new vec(pos).addv(heading).mag() > pos.mag())){
       pos.add(heading);
     }else{
       heading = new vec(0, 0);
