@@ -45,6 +45,9 @@ class enemy{
       fill(255, 0, 0);
       noStroke();
       ellipse(pos.x, pos.y, 10 / scale, 10 / scale);
+      if(exp){
+        return true;
+      }
     }
     return false;
   }
@@ -59,6 +62,7 @@ class enemy{
       exp = true;
       return "crash"; // enemy hit the ground
     }else if(pos.to(roc.pos).mag() >1200){
+      exp = true;
       println("far");
       return "far"; // enemy is too far, delete it
     }else{
@@ -106,7 +110,7 @@ class bullet{
           popMatrix();
           return false;
         }
-        rect(-10, -20, 10, 40);
+        rect(-6, -20, 12, 40);
       popMatrix();
     }else{
       fill(255, 0, 0);
@@ -122,9 +126,10 @@ class bullet{
   String check(){
     for(int i = 0; i < ens.size(); i ++){
       enemy en = ens.get(i);
-      if(pos.to(en.pos).mag() < 40){
+      if(pos.to(en.pos).mag() < 60){
         exp = true;
         ens.remove(i);
+        checkhb();
         return "hit";
       }
     }

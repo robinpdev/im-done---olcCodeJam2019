@@ -39,7 +39,7 @@ class object{
     heading.add(planet.attract(this));
     
     // to not fall through planet
-    if(pos.mag() > planetrad + 34){ 
+    if(pos.mag() > planetrad + 7){ 
       pos.add(heading);
     }else{
       heading = new vec(0, 0);

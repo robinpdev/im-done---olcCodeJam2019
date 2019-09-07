@@ -1,11 +1,11 @@
 rocket roc; // main rocket object
 body planet; //main planet
-object bom;
-ArrayList<enemy> ens;
-ArrayList<bullet> buls;
+object bom; //the bomb
+ArrayList<enemy> ens; //the enemies
+ArrayList<bullet> buls; //the bullets
 
 long frame = 0;
-float scale = 0.2; // scale for drawing everything - zoom
+float scale = 0.61; // scale for drawing graphics - zoom
 float msens = 0.8; // mousewheel sensitivity for zooming
 final int fps = 30;
 int frameskip = 1; //number of frames skipped for time warping
@@ -27,7 +27,11 @@ boolean launch = false; //has the rocket launched yet
 int health = 100; //health of rocket
 float gundir = 0; //direction of gun
 vec can; //postition of cannon
-int time = 10 * fps;
+final int damage = 30;
+final int maxt = 1 * fps;
+int time = maxt;
+boolean zoomlock = true;
+boolean hb = true; //show healthbar
 
 int stage = 0;
 /*
@@ -81,6 +85,18 @@ void draw(){
   
   if(atmdraw){ drawatm(); }
   
+  noStroke();
+  fill(0, 255, 0);
+  ellipse(-planetrad - 70000, -planetrad - 70000, 10 / scale, 10 / scale); //bomb in orbit
+  ellipse(planetrad + 70000, -planetrad - 70000, 10 / scale, 10 / scale); //bomb in orbit
+  
+  if(scale < 0.003){
+    fill(0, 0, 180);
+    ellipse(0, planetrad + 100000, 90000, 90000);
+    ellipse(0, -planetrad - 100000, 90000, 90000);
+    strokeWeight(1);
+  }
+  
   if(roc.alt() > -10){ // path prediction
     if(plan(0.5)){
       roc.predictpath();
@@ -92,11 +108,10 @@ void draw(){
   bom.render();
   ellipse(bom.pos.x, bom.pos.y, 100, 100); }
   
-  
-  
   for(int i = 0; i < ens.size(); i ++){
     if(ens.get(i).render() == true){
       ens.remove(i);
+      checkhb();
     }
   }
   for(int i = 0; i < buls.size(); i ++){
@@ -117,6 +132,8 @@ void draw(){
     translate(-planetrad, -planetrad);
     image(earf, 0,  0, planetrad * 2.006, planetrad * 2.006);
     popMatrix();
+    
+    
   }else{
     noStroke(); fill(132, 180, 81);
     ellipse(0, 0, planetrad * 2, planetrad * 2); // planet
@@ -126,7 +143,7 @@ void draw(){
     line(10, planetrad, 10, planetrad + 70);
   }
   
-  if(!launch){
+  if(!launch && stage <= 5){
     float px = (mouseX - width / 2) / -scale;
     float py = (mouseY - height / 2) / -scale + planetrad;
     gundir = new vec(can.x, can.y).to(new vec(px, py + 20)).dir();
@@ -168,7 +185,7 @@ void draw(){
   stroke(0);
   noFill();
   strokeWeight(1);
-  if(!launch && stage == 3 || stage == 4){
+  if(hb){
     rect(1000, 20, 250, 30);
     fill(0, 255, 0);
     rect(1000, 20, int(map(health, 0, 100, 0, 250)), 30);
@@ -177,10 +194,10 @@ void draw(){
     noFill();
     rect(1000, 60, 250, 30);
     fill(0, 0, 255);
-    rect(1000, 60, int(map(time, 0, 90 * fps, 0, 250)), 30);
+    rect(1000, 60, int(map(time, 0, maxt, 0, 250)), 30);
   }
   
-  gameupdate(); // physics update every frame
+  gameupdate(); // physics and timing update every frame
   
 }
 
@@ -201,8 +218,8 @@ void gameupdate(){
       }else{
         println("timer over");
         stage = 5;
+        zoomlock = false;
       }
-      
     }
     
     for(int i = 0; i < ens.size(); i ++){
@@ -214,8 +231,9 @@ void gameupdate(){
     if(plan(0.5)){
       for(int i = 0; i < ens.size(); i ++){
         String result = ens.get(i).check();
-        if(result == "hit"){
+        if(result == "hit" && stage == 4){
           health -= 10;
+          if(health <= 0){ stage = 6; }
         }
       }
       for(int i = 0; i < buls.size(); i ++){
@@ -224,7 +242,7 @@ void gameupdate(){
           
         }
       }
-      if(plan(1) && roc.alt() < 10000){
+      if(stage <= 4 && plan(1) && roc.alt() < 10000){
         spawnens();
       }
     }
@@ -234,7 +252,30 @@ void gameupdate(){
   }
 }
 
+void checkorbit(){
+  predskip = 600;
+  roc.predictpath();
+  boolean p1 = false;
+  boolean p2 = false;
+  for(int i = 0; i < roc.path.size(); i += 1){
+    vec p = roc.path.get(i);
+    if(p.to(new vec(0, planetrad + 100000)).mag() < 45000){
+      p1 = true;
+    }else if(p.to(new vec(0, -planetrad - 100000)).mag() < 45000){
+      p2 = true;
+    }
+  }
+  println(p1);
+  println(p2);
+  println(p1 && p2);
+  println();
+  
+  if(p1 && p2){ stage = 10; }
+}
+
 void detach(){
+  checkorbit(); //DELETE later, for debugging
+  if(attach){
   bom.pos = new vec(roc.pos);
   bom.pos.add(new vec(0, 20).rotate(roc.rotation));
   bom.heading = new vec(roc.heading);
@@ -244,21 +285,24 @@ void detach(){
   
   roc.sprite = loadImage("/res/rbodyg_nob.png");
   
+  checkorbit();
+  
   attach = false;
+  }
 }
 
 //controls and control variables
 int rot = 0; //rotation status: -1: ccw, 1: cw
 void keyPressed(){
-  if(key == ' ' && stage >= 5){
+  if(key == ' ' && stage >= 5 && stage != 6){
     stage = 7;
     roc.thruston = true;
     predictjob = true;}
   else if(key == 'e'){
     rot = 1;}
-  else if(key == 'a'){
+  else if(key == 'q'){
     rot = -1;}
-  else if(key == 'r'){
+  else if(key == 'r' && stage >= 7){
     detach();}
   else if((keyCode == ENTER || keyCode == RETURN) && stage == 3){
     println("timer started");
@@ -271,7 +315,7 @@ void keyReleased(){
     roc.thruston = false;
     roc.predictpath();
     predictjob = false;}
-  else if(key == 'e' || key == 'a'){
+  else if(key == 'e' || key == 'q'){
     rot = 0;}
 
   else if(key == CODED){
@@ -320,30 +364,38 @@ void drawatm(){
 }
 
 void mousePressed(){
-  if(!launch){
+  if(!launch && stage == 4){
     buls.add(new bullet(can, gundir));
   }
 }
 
 void mouseWheel(MouseEvent event) { // for zooming
-  float e = event.getCount();
-  if(e > 0.2){                                     
-    scale *= msens;
-  }
-  else if(e < 0.2){                                      
-    if(scale < 3.5){ scale /= msens; }
-  }
-  if(atmdraw && scale < 0.0002){
-    atmdraw = false;
-  }else if (scale > 0.0002){
-    atmdraw = true;
-  }
-  if(scale < 0.003){
-    predskip = int( map(scale, 0.003, 0.0001, 40, 600) );
-  }else{
-    predskip = 40;
+  if(!zoomlock){
+    float e = event.getCount();
+    if(e > 0.2){                                     
+      scale *= msens;
+    }
+    else if(e < 0.2){                                      
+      if(scale < 3.5){ scale /= msens; }
+    }
+    if(atmdraw && scale < 0.0002){
+      atmdraw = false;
+    }else if (scale > 0.0002){
+      atmdraw = true;
+    }
+    if(scale < 0.003){
+      predskip = int( map(scale, 0.003, 0.0001, 40, 600) );
+    }else{
+      predskip = 40;
+    }
   }
   //println(scale);
+}
+
+void checkhb(){
+  if(stage >= 7 && ens.size() == 0){
+    hb = false;
+  }
 }
 
 boolean plan(float time){
