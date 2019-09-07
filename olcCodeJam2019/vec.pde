@@ -59,6 +59,14 @@ class vec{
     return setmag(mag() * mag);
   }
   
+  vec invert(){
+    return new vec(x * -1, y * -1);
+  }
+  
+  float dir(){
+    return atan(y / x);
+  }
+  
   float speed(){
     return mag() * fps;
   }

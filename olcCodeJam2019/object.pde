@@ -62,6 +62,7 @@ class object{
     if(scale > 0.1){
       pushMatrix();
         translate(pos.x, pos.y);
+        scale(-1,-1);
         rotate(rotation);
         translate(-sprdim.x / 2 , -sprdim.y / 2);  
         image(sprite, 0, 0, sprdim.x, sprdim.y);
