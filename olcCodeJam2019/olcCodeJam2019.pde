@@ -27,12 +27,28 @@ boolean launch = false; //has the rocket launched yet
 int health = 100; //health of rocket
 float gundir = 0; //direction of gun
 vec can; //postition of cannon
+int time = 10 * fps;
+
+int stage = 0;
+/*
+stage 0: startup
+stage 1: loaded everything
+stage 2: start dialog
+stage 3: rocket scene loaded
+stage 4: timer started
+stage 5: timer over
+stage 6: game over
+stage 7: launched
+stage 8: faring off
+stage 9: bomb deployed, game over
+stage 10: bomb deployed, win
+*/
 
 void setup(){
   size(1280, 720);
   frameRate(fps);
   
-  roc = new rocket(new vec(0, planetrad + 100), 1421000); //initialize rocket with mass of falcon heavy
+  roc = new rocket(new vec(0, planetrad + 35), 1421000); //initialize rocket with mass of falcon heavy
   roc.sprdim = roc.sprdim.scaley(70.0); // give rocket a height of 70
   //roc.pos.y += roc.sprdim.y / 2; //adjust rocket pos to put gear down
 
@@ -45,6 +61,10 @@ void setup(){
   
   skybox = loadImage("/res/skybox.png");
   earf = loadImage("res/earf.png");
+  
+  stage = 1;
+  
+  stage = 3;
 }
 
 void draw(){
@@ -145,13 +165,19 @@ void draw(){
   text("predskip: " + predskip, 10, 64);
   text("gundir: " + degrees(gundir), 10, 82);
   
-  if(!launch){
-    stroke(0);
-    noFill();
-    strokeWeight(1);
+  stroke(0);
+  noFill();
+  strokeWeight(1);
+  if(!launch && stage == 3 || stage == 4){
     rect(1000, 20, 250, 30);
     fill(0, 255, 0);
     rect(1000, 20, int(map(health, 0, 100, 0, 250)), 30);
+  }
+  if(stage == 4){
+    noFill();
+    rect(1000, 60, 250, 30);
+    fill(0, 0, 255);
+    rect(1000, 60, int(map(time, 0, 90 * fps, 0, 250)), 30);
   }
   
   gameupdate(); // physics update every frame
@@ -160,12 +186,23 @@ void draw(){
 
 void gameupdate(){
   if(frameskip == 1){
-    roc.update();
+    if(stage >= 7){
+      roc.update();
+      if(!attach){ bom.update(); }
+      if(plan(1) && faring && roc.alt() > 30000){ //detach faring if above atm
+        roc.sprite = loadImage("/res/rbodyg_nof.png");
+        faring = false;
+      }
+    }
     
-    if(!attach){ bom.update(); }
-    if(plan(1) && faring && roc.alt() > 30000){ //detach faring if above atm
-      roc.sprite = loadImage("/res/rbodyg_nof.png");
-      faring = false;
+    if(stage == 4){
+      if(time > 0){
+        time -= 1;
+      }else{
+        println("timer over");
+        stage = 5;
+      }
+      
     }
     
     for(int i = 0; i < ens.size(); i ++){
@@ -187,7 +224,7 @@ void gameupdate(){
           
         }
       }
-      if(plan(1)){
+      if(plan(1) && roc.alt() < 10000){
         spawnens();
       }
     }
@@ -213,7 +250,8 @@ void detach(){
 //controls and control variables
 int rot = 0; //rotation status: -1: ccw, 1: cw
 void keyPressed(){
-  if(key == ' '){
+  if(key == ' ' && stage >= 5){
+    stage = 7;
     roc.thruston = true;
     predictjob = true;}
   else if(key == 'e'){
@@ -222,6 +260,10 @@ void keyPressed(){
     rot = -1;}
   else if(key == 'r'){
     detach();}
+  else if((keyCode == ENTER || keyCode == RETURN) && stage == 3){
+    println("timer started");
+    stage = 4;
+  }
 }
 
 void keyReleased(){
@@ -231,7 +273,7 @@ void keyReleased(){
     predictjob = false;}
   else if(key == 'e' || key == 'a'){
     rot = 0;}
-    
+
   else if(key == CODED){
     if(keyCode == RIGHT){
       frameskip *= 5;
@@ -239,6 +281,7 @@ void keyReleased(){
     else if(keyCode == LEFT && frameskip >= 5){
       frameskip /= 5;
       println(frameskip);}
+    
   }
 }
 

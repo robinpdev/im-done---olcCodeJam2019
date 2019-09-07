@@ -39,7 +39,7 @@ class enemy{
           popMatrix();
           return false;
         }
-        rect(-10, -20, 10, 40);
+        rect(-10, -20, 20, 40);
       popMatrix();
     }else{
       fill(255, 0, 0);
@@ -112,6 +112,9 @@ class bullet{
       fill(255, 0, 0);
       noStroke();
       ellipse(pos.x, pos.y, 10 / scale, 10 / scale);
+      if(exp){
+        return true;
+      }
     }
     return false;
   }
