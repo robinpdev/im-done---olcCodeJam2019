@@ -69,15 +69,73 @@ void setup(){
   stage = 1;
   
   stage = 3;
+  
+  stage = 10; //REMOVE, for testing
 }
+
+//cutscene variables
+int cstage = 0;
+int csframe = 0;
+object[] boms;
+body simearf;
 
 void draw(){
   frame ++;
   background(0);
-  
-  image(skybox, 0, 0, width, height);
-  
+
   translate(width / 2, height / 2); //centering view
+  
+  if(stage == 10){
+    if(cstage == 0){
+      boms = new object[3];
+      for(int i = 0; i < boms.length; i ++){
+        boms[i] = new object(new vec(), 10000, "/res/rbody.png");
+        boms[i].pos = new vec(0, 240 + 20 * i).rotate(360 / (boms.length - 1) * i);
+      }
+      simearf = new body(new vec(), 10000000);
+      cstage = 1;
+    }
+    
+    image(skybox, -width / 2, -height / 2, width, height);
+    if(cstage <= 1){ image(earf, -height / 4, -height / 4, height / 2, height / 2); }
+    
+    noStroke();
+    fill(0, 255, 0);
+    for(int i = 0; i < boms.length; i ++){
+      if(!boms[i].bxp){
+        boms[i].heading.add(boms[i].pos.to(new vec()).scalemag(0.00005));
+        boms[i].pos.add(boms[i].heading);
+        ellipse(boms[i].pos.x, boms[i].pos.y, 10, 10);
+        if(boms[i].pos.to(new vec()).mag() < height / 4){
+          boms[i].bxp = true;
+        }
+      }else{
+        int rad = int( pow(boms[i].bxpt, 1.5) );
+        boms[i].bxpt += 1;
+        if(rad <= 1280){
+          fill(255, 216, 107);
+        }else{
+          if(cstage == 1){ cstage = 2; }
+          int alpha = int( map(rad - 1280, 0, 1280, 255, 0) );
+          fill(255, 216, 107, alpha);
+          if(alpha <= -200){
+            delay(5000);
+            stage = 11;
+          }
+        }
+        
+        
+        ellipse(boms[i].pos.x, boms[i].pos.y, rad, rad);
+        
+      }
+      
+    }
+    
+    return;
+  }
+  
+  image(skybox, -width / 2, -height / 2, width, height);
+  
   scale(scale, scale); //aplying zoom
   pushMatrix();
   translate(roc.pos.x, roc.pos.y);
@@ -90,10 +148,18 @@ void draw(){
   ellipse(-planetrad - 70000, -planetrad - 70000, 10 / scale, 10 / scale); //bomb in orbit
   ellipse(planetrad + 70000, -planetrad - 70000, 10 / scale, 10 / scale); //bomb in orbit
   
-  if(scale < 0.003){
+  if(scale < 3.1e-4){
     fill(0, 0, 180);
-    ellipse(0, planetrad + 100000, 90000, 90000);
-    ellipse(0, -planetrad - 100000, 90000, 90000);
+    ellipse(0, planetrad + 200000, 90000, 90000);
+    ellipse(0, -planetrad - 200000, 90000, 90000);
+    strokeWeight(1);
+  }
+  else if(scale < 0.003){
+    noFill();
+    stroke(0, 0, 180);
+    strokeWeight(3 / scale);
+    ellipse(0, planetrad + 200000, 90000, 90000);
+    ellipse(0, -planetrad - 200000, 90000, 90000);
     strokeWeight(1);
   }
   
@@ -117,6 +183,7 @@ void draw(){
   for(int i = 0; i < buls.size(); i ++){
     if(buls.get(i).render() == true){
       buls.remove(i);
+      checkhb();
     }
   }
   
@@ -132,8 +199,6 @@ void draw(){
     translate(-planetrad, -planetrad);
     image(earf, 0,  0, planetrad * 2.006, planetrad * 2.006);
     popMatrix();
-    
-    
   }else{
     noStroke(); fill(132, 180, 81);
     ellipse(0, 0, planetrad * 2, planetrad * 2); // planet
@@ -259,9 +324,9 @@ void checkorbit(){
   boolean p2 = false;
   for(int i = 0; i < roc.path.size(); i += 1){
     vec p = roc.path.get(i);
-    if(p.to(new vec(0, planetrad + 100000)).mag() < 45000){
+    if(p.to(new vec(0, planetrad + 200000)).mag() < 45000){
       p1 = true;
-    }else if(p.to(new vec(0, -planetrad - 100000)).mag() < 45000){
+    }else if(p.to(new vec(0, -planetrad - 200000)).mag() < 45000){
       p2 = true;
     }
   }
@@ -295,8 +360,9 @@ void detach(){
 int rot = 0; //rotation status: -1: ccw, 1: cw
 void keyPressed(){
   if(key == ' ' && stage >= 5 && stage != 6){
-    stage = 7;
+    if(stage == 5){ stage = 7; }
     roc.thruston = true;
+    checkhb();
     predictjob = true;}
   else if(key == 'e'){
     rot = 1;}

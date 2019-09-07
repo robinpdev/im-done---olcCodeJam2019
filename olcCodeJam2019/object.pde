@@ -8,6 +8,8 @@ class object{
   float mass;
   float rotation;
   float rotheading;
+  boolean bxp = false;
+  int bxpt = 0;
 
   PImage sprite;
   vec sprdim;
