@@ -61,6 +61,7 @@ String[] message = {
   "orbit does not seem to be correct, try again. press enter",
   "Ready to launch!\nRocket controls: hold Space to light engines, q to rotate left, a to rotate right.\nuse srollwheel to zoom. left and right arrows to accelerate time\nPRESS R TO RELEAST BOM WHEN IN CORRECT ORBIT\npress TAB to see more instructions",
   "the rocket was destroyed, your plan failed. press enter",
+  "bomb was released succesfully, deorbiting all bombs",
   "you shouldn't be seeing this message, please report this incident to me on discor: inzywinki#8200"
 };
 int curmes = 0; //current message displayed
@@ -114,7 +115,7 @@ void setup(){
   stage = 1;
   stage = 2;
   
-  /*stage = 7;
+  /*stage = 4;
   play = true;
   zoomlock =false;*/
 
@@ -370,7 +371,10 @@ void draw(){
     }
     if(curmes == 11 && stage == 6){
       stage = 11;
-    }else if(curmes == 11){
+    }else if(curmes == 12 && stage == 7){
+      stage =10;
+    }
+    else if(curmes == 11 && stage <= 6){
       play = true;
       dispm = false;
     }
@@ -474,7 +478,8 @@ void detach(){
   bom.rotheading = roc.rotheading;
   roc.sprite = loadImage("/res/rbodyg_nob.png");
   
-  stage = 10;
+  dispm = true;
+  curmes = 11;
   attach = false;
   }else{
     dispm = true;
@@ -502,6 +507,11 @@ void keyPressed(){
     detach();}
   else if(key == 'p' && stage >= 3){
     play = !play;}
+  else if(key == '9'){
+    stage = 7;
+    roc.pos = new vec(0, planetrad + 200000);
+    roc.heading = new vec(-4888 / fps, 0);
+  }
   else if(keyCode == TAB){
     help = !help;}
   else if((keyCode == ENTER || keyCode == RETURN)){

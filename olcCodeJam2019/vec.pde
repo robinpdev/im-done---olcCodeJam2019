@@ -27,7 +27,6 @@ class vec{
     out.y += input.y;
     return out;
   }
-
   
   vec to(vec input){
     return new vec(input.x - x, input.y - y);
