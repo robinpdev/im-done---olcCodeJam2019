@@ -7,6 +7,7 @@ ArrayList<bullet> buls; //the bullets
 
 //core variables
 long frame = 0;
+long prevframe = 0; //for reload timing of cannon
 float scale = 0.61; // scale for drawing graphics - zoom
 float msens = 0.8; // mousewheel sensitivity for zooming
 final int fps = 30;
@@ -30,19 +31,22 @@ PImage enemy;
 vec towerdim;
 PImage gun; //moveable cannon asset
 vec gundim;
+PImage instructions;
+vec insdim;
 
 //gameplay variables
-boolean attach = true; //is bomb attached
-boolean faring = true; //is faring on
-boolean launch = false; //has the rocket launched yet
-int health = 100; //health of rocket
-float gundir = 0; //direction of gun
-vec can; //postition of cannon
-final int damage = 30;
-final int maxt = 90 * fps;
-int time = maxt;
-boolean zoomlock = true;
-boolean hb = true; //show healthbar
+boolean attach = true;     //is bomb attached
+boolean faring = true;     //is faring on
+boolean launch = false;    //has the rocket launched yet
+int health = 100;          //health of rocket
+float gundir = 0;          //direction of gun
+vec can;                   //postition of cannon
+final int damage = 30;     //damage per enemy
+final int maxt = 90 * fps; //timer length
+int time = maxt;           //time left till launch
+boolean zoomlock = true;   //explains itself
+boolean hb = true;         //show healthbar
+boolean help = false;      //show instructions
 
 //dialog variables
 String[] message = {
@@ -51,14 +55,14 @@ String[] message = {
   "so you make yourself 3 nuclear bombs and put them in 3 powerful rockets you built from something called a space shuttle. press enter",
   "you managed to launch 2 of those bombs into orbit (green dots), but now the rest of the world heard of your plans and wants to stop you. press enter",
   "the objective is to get into a circular orbit around the planet that passes through the two blue dots in the sky",
-  "enemies will be attacking you with projectiles from the sky, use the cannon to defend yourself by clicking in the direction you want to shoot. press enter",
+  "enemies will be attacking you with projectiles from the sky, use the cannon to defend yourself. press enter",
   "controls: click in the direction you want to shoot to use the cannon and destroy the projectiles. press enter",
   "the lauch cycle lasts 90 seconds before liftoff, defend the rocket! press enter to start the cycle",
   "orbit does not seem to be correct, try again. press enter",
-  "Ready to launch!\nRocket controls: Space to light engines, q to rotate left, a to rotate right.\nuse srollwheel to zoom.\nPRESS R TO RELEAST BOM WHEN IN CORRECT ORBIT",
+  "Ready to launch!\nRocket controls: hold Space to light engines, q to rotate left, a to rotate right.\nuse srollwheel to zoom. left and right arrows to accelerate time\nPRESS R TO RELEAST BOM WHEN IN CORRECT ORBIT\npress TAB to see more instructions",
   "the rocket was destroyed, your plan failed. press enter",
-  "you shouldn't be seeing this message, please report this incident to me"
-  
+  "bomb was released succesfully, deorbiting all bombs",
+  "you shouldn't be seeing this message, please report this incident to me on discor: inzywinki#8200"
 };
 int curmes = 0; //current message displayed
 int maxl = 1; //amount of letters from message displayed, for showing text gameboy style
@@ -78,6 +82,8 @@ stage 7: launched
 stage 8: faring off
 stage 9: bomb deployed, game over
 stage 10: bomb deployed, win
+stage 11: rocket destroyed, game over
+stage 12: bomb delivered correctly, end
 */
 
 void setup(){
@@ -86,6 +92,7 @@ void setup(){
   
   roc = new rocket(new vec(0, planetrad + 35), 1421000); //initialize rocket with mass of falcon heavy
   roc.sprdim = roc.sprdim.scaley(70.0); // give rocket a height of 70
+  roc.flamedim = roc.flamedim.scalex(roc.sprdim.x);
   //roc.pos.y += roc.sprdim.y / 2; //adjust rocket pos to put gear down
 
   planet = new body(new vec(0, 0), planetmass);
@@ -102,10 +109,15 @@ void setup(){
   gun = loadImage("/res/gun.png");
   bullet = loadImage("/res/bullet.png");
   enemy = loadImage("/res/enemy.png");
+  instructions = loadImage("/res/instructions.png");
+  insdim = new vec(instructions.width, instructions.height).scaley(height);
   
   stage = 1;
-  
   stage = 2;
+  
+  /*stage = 4;
+  play = true;
+  zoomlock =false;*/
 
 }
 
@@ -312,8 +324,8 @@ void draw(){
   text("height: " + int(roc.alt()) + " meter", 10, 10);
   text("speed:  " + int(roc.heading.scalemag(fps).mag()) + " m/s", 10, 28);
   text("scale: " + scale, 10, 46);
-  text("predskip: " + predskip, 10, 64);
-  text("gundir: " + degrees(gundir), 10, 82);
+  //text("predskip: " + predskip, 10, 64);
+  //text("gundir: " + degrees(gundir), 10, 82);
   
   //healthbar
   stroke(0);
@@ -331,6 +343,11 @@ void draw(){
     fill(0, 0, 255);
     rect(1000, 60, int(map(time, 0, maxt, 0, 250)), 30);
   }
+  
+  if(help){
+    image(instructions, width - insdim.x, 0, insdim.x, insdim.y);
+  }
+  
   if(dispm){
     pushMatrix();
     translate(width / 2, height / 2);
@@ -354,7 +371,10 @@ void draw(){
     }
     if(curmes == 11 && stage == 6){
       stage = 11;
-    }else if(curmes == 11){
+    }else if(curmes == 12 && stage == 7){
+      stage =10;
+    }
+    else if(curmes == 11 && stage <= 6){
       play = true;
       dispm = false;
     }
@@ -458,7 +478,8 @@ void detach(){
   bom.rotheading = roc.rotheading;
   roc.sprite = loadImage("/res/rbodyg_nob.png");
   
-  stage = 10;
+  dispm = true;
+  curmes = 11;
   attach = false;
   }else{
     dispm = true;
@@ -486,6 +507,13 @@ void keyPressed(){
     detach();}
   else if(key == 'p' && stage >= 3){
     play = !play;}
+  else if(key == '9'){
+    stage = 7;
+    roc.pos = new vec(0, planetrad + 200000);
+    roc.heading = new vec(-4888 / fps, 0);
+  }
+  else if(keyCode == TAB){
+    help = !help;}
   else if((keyCode == ENTER || keyCode == RETURN)){
     if(dispm){
       nextm = true;
@@ -505,7 +533,7 @@ void keyReleased(){
     rot = 0;}
 
   else if(key == CODED){
-    if(keyCode == RIGHT){
+    if(keyCode == RIGHT && frameskip < 625){
       frameskip *= 5;
       println(frameskip);}
     else if(keyCode == LEFT && frameskip >= 5){
@@ -550,8 +578,9 @@ void drawatm(){
 }
 
 void mousePressed(){
-  if(!launch && stage >= 4 && stage <= 5){
+  if(!launch && stage >= 4 && stage <= 5 && frame - prevframe >= 20){
     buls.add(new bullet(can, gundir));
+    prevframe = frame;
   }
 }
 

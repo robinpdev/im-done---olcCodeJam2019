@@ -9,7 +9,9 @@ class rocket{
   boolean thruston = false;
   
   PImage sprite;
+  PImage flame;
   vec sprdim;
+  vec flamedim;
   
   ArrayList<vec> path = null;
   
@@ -18,6 +20,8 @@ class rocket{
     heading = new vec();
     sprite = loadImage("/res/rbodyg.png");
     sprdim = new vec(sprite.width, sprite.height);
+    flame = loadImage("/res/flame.png");
+    flamedim = new vec(flame.width, flame.height);
     mass = mmass;
     rotation = 0f;
     rotheading = 0f;
@@ -73,7 +77,16 @@ class rocket{
         scale(scale, scale);
         rotate(rotation);
         translate(-sprdim.x / 2 , -sprdim.y / 2);
+        if(thruston){
+          pushMatrix();
+          translate(sprdim.x / 2, sprdim.y / 2 + sprdim.y / 1.9);
+          imageMode(CENTER);
+          image(flame, 0, 0, flamedim.x * 0.45, flamedim.y * 0.45);
+          imageMode(CORNER);
+          popMatrix();
+        }
         image(sprite, 0, 0, sprdim.x, sprdim.y);
+        
       popMatrix();
     }else{
       pushMatrix();

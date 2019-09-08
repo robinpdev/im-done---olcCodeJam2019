@@ -27,7 +27,6 @@ class vec{
     out.y += input.y;
     return out;
   }
-
   
   vec to(vec input){
     return new vec(input.x - x, input.y - y);
@@ -47,6 +46,10 @@ class vec{
   
   vec scaley(float dy){
     return this.setmag(dy * this.mag() / this.y);
+  }
+  
+  vec scalex(float dx){
+    return this.setmag(dx * this.mag() / this.x);
   }
   
   vec rotate(float rot){
