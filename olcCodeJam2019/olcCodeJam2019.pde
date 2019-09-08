@@ -1,26 +1,37 @@
+//main game objects
 rocket roc; // main rocket object
 body planet; //main planet
 object bom; //the bomb
 ArrayList<enemy> ens; //the enemies
 ArrayList<bullet> buls; //the bullets
 
+//core variables
 long frame = 0;
 float scale = 0.61; // scale for drawing graphics - zoom
 float msens = 0.8; // mousewheel sensitivity for zooming
 final int fps = 30;
 int frameskip = 1; //number of frames skipped for time warping
 int predskip = 40; //number of frames skipped for predicting path
+boolean predictjob = false; //is predicting path needed
+boolean play = true;
 
-boolean predictjob = false;
-
+//physics variables
 final float planetrad = 997100; //radius of planet 
 final float planetmass = 1.400e22;  //mass of planet -prev = 0.8e22
 final float gconst = 6.674e-11; // the real gravitational constant of the universe;
 float thrust = 6f / fps; //engine force
 
+//assets
 PImage skybox;
 PImage earf; //planet
+PImage tower; //launchtower
+PImage bullet;
+PImage enemy;
+vec towerdim;
+PImage gun; //moveable cannon asset
+vec gundim;
 
+//gameplay variables
 boolean attach = true; //is bomb attached
 boolean faring = true; //is faring on
 boolean launch = false; //has the rocket launched yet
@@ -30,10 +41,21 @@ vec can; //postition of cannon
 final int damage = 30;
 final int maxt = 1 * fps;
 int time = maxt;
-boolean zoomlock = true;
+boolean zoomlock = false;
 boolean hb = true; //show healthbar
 
-int stage = 0;
+//dialog variables
+String[] message = {
+  "welcome to i'm done by inzywinki for olcCodeJam2019! press enter",
+  "prologue: one day you get up and you decide that you are done with the world. press enter",
+  "so you make yourself 3 nuclear bombs and put them in 3 rockets you built from something called a space shuttle. press enter",
+  "you managed to launch 2 of those bombs into orbit, but now the rest of the world heard of your plans and want to stop you",
+  
+};
+int curmes = 0; //current message displayed
+int maxl = 1; //amount of letters from message displayed, for showing text gameboy style
+
+int stage = 0; //progress of game
 /*
 stage 0: startup
 stage 1: loaded everything
@@ -61,16 +83,22 @@ void setup(){
   bom.sprdim = bom.sprdim.scaley(20.0);
   ens = new ArrayList<enemy>();
   buls = new ArrayList<bullet>();
-  can = new vec(50, planetrad + 150);
+  can = new vec(50, planetrad + 105);
   
   skybox = loadImage("/res/skybox.png");
   earf = loadImage("res/earf.png");
+  tower = loadImage("/res/tower.png");
+  towerdim = new vec(tower.width, tower.height).scaley(120.0);
+  println(towerdim.mag());
+  gun = loadImage("/res/gun.png");
+  bullet = loadImage("/res/bullet.png");
+  enemy = loadImage("/res/enemy.png");
   
   stage = 1;
   
   stage = 3;
   
-  stage = 10; //REMOVE, for testing
+  //stage = 10; //REMOVE, for testing
 }
 
 //cutscene variables
@@ -220,22 +248,20 @@ void draw(){
     rotate(gundir);
     noStroke();
     fill(255);
-    rect(-20, -10, 40, 20);
+    //rect(-20, -10, 40, 20);
+    image(gun, -20, -10, 40, 20);
     popMatrix();
   }
-  
-  
+  pushMatrix();
+  translate(0, planetrad);
+  scale(-1, -1);
+  image(tower, -60, -115, towerdim.x, towerdim.y);
   popMatrix();
   
+  popMatrix();
+
   //drawing rocket
   roc.render();
-  /*if(attach){
-    pushMatrix();
-    rotate(roc.rotation);
-    translate(0, -45);
-    bom.crender();
-    popMatrix();
-  }*/
   
   textSize(12);
   fill(255);
@@ -262,7 +288,7 @@ void draw(){
     rect(1000, 60, int(map(time, 0, maxt, 0, 250)), 30);
   }
   
-  gameupdate(); // physics and timing update every frame
+  if(play){ gameupdate(); } // physics and timing update every frame when not paused
   
 }
 
@@ -293,11 +319,11 @@ void gameupdate(){
     for(int i = 0; i < buls.size(); i ++){
       buls.get(i).update();
     }
-    if(plan(0.5)){
+    if(plan(0.5) && hb){
       for(int i = 0; i < ens.size(); i ++){
         String result = ens.get(i).check();
-        if(result == "hit" && stage == 4){
-          health -= 10;
+        if(result == "hit" && hb){
+          health -= damage;
           if(health <= 0){ stage = 6; }
         }
       }
@@ -370,6 +396,8 @@ void keyPressed(){
     rot = -1;}
   else if(key == 'r' && stage >= 7){
     detach();}
+  else if(key == 'p'){
+    play = !play;}
   else if((keyCode == ENTER || keyCode == RETURN) && stage == 3){
     println("timer started");
     stage = 4;
@@ -430,7 +458,7 @@ void drawatm(){
 }
 
 void mousePressed(){
-  if(!launch && stage == 4){
+  if(!launch && stage <= 5){
     buls.add(new bullet(can, gundir));
   }
 }

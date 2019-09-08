@@ -2,18 +2,23 @@
 class enemy{
   vec pos;
   vec heading;
-  float rotation;
+  float rotation = 0;
   
   boolean exp = false;
   int ext = 1;
   
+  vec sprdim;
+  
   
   public enemy(){
     int x = 700;
-    if(chance(3)){ x = -700; }
+    if(chance(3)){ x = -700; rotation += radians(180);}
     pos = roc.pos.addv(new vec(x, 0 + int( random(0, 700) )));
     heading = pos.to(roc.pos).setmag(2).addv(new vec(random(-0.25, 0.25), random(-0.25, 0.25)));
-    rotation = heading.dir() + degrees(90);
+    rotation += heading.dir() + degrees(90);
+    
+    sprdim = new vec(enemy.width, enemy.height);
+    sprdim = sprdim.scaley(50);
   }
   
   public void update(){
@@ -39,7 +44,9 @@ class enemy{
           popMatrix();
           return false;
         }
-        rect(-10, -20, 20, 40);
+        //rect(-10, -20, 20, 40);
+        translate(-sprdim.x / 2 , -sprdim.y / 2);  
+        image(enemy, 0, 0, sprdim.x, sprdim.y);
       popMatrix();
     }else{
       fill(255, 0, 0);
@@ -80,11 +87,17 @@ class bullet{
   boolean exp;
   int ext = 1;
   
+  PImage sprite;
+  vec sprdim;
+  
   public bullet(vec mpos, float mrotation){
     pos = new vec(mpos);
     rotation = new Float(mrotation);
     heading = new vec(5, 0).rotate(rotation);
     rotation += radians(90);
+
+    sprdim = new vec(bullet.width, bullet.height);
+    sprdim = sprdim.scaley(50);
   }
   
   public void update(){
@@ -110,7 +123,9 @@ class bullet{
           popMatrix();
           return false;
         }
-        rect(-6, -20, 12, 40);
+        //rect(-6, -20, 12, 40);
+        translate(-sprdim.x / 2 , -sprdim.y / 2);  
+        image(bullet, 0, 0, sprdim.x, sprdim.y);
       popMatrix();
     }else{
       fill(255, 0, 0);
