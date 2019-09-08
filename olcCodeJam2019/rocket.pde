@@ -70,13 +70,15 @@ class rocket{
   void render(){
     if(scale > 0.1){
       pushMatrix();
+        scale(scale, scale);
         rotate(rotation);
         translate(-sprdim.x / 2 , -sprdim.y / 2);
         image(sprite, 0, 0, sprdim.x, sprdim.y);
       popMatrix();
     }else{
       pushMatrix();
-      scale(1 / scale, 1 / scale);
+      //scale(1 / scale, 1 / scale);
+      
       fill(255);
       noStroke();
       ellipse(0, 0, 10, 10);

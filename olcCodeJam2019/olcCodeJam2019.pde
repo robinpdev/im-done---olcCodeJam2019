@@ -13,7 +13,7 @@ final int fps = 30;
 int frameskip = 1; //number of frames skipped for time warping
 int predskip = 40; //number of frames skipped for predicting path
 boolean predictjob = false; //is predicting path needed
-boolean play = true;
+boolean play = false;
 
 //physics variables
 final float planetrad = 997100; //radius of planet 
@@ -41,19 +41,28 @@ vec can; //postition of cannon
 final int damage = 30;
 final int maxt = 1 * fps;
 int time = maxt;
-boolean zoomlock = false;
+boolean zoomlock = true;
 boolean hb = true; //show healthbar
 
 //dialog variables
 String[] message = {
   "welcome to i'm done by inzywinki for olcCodeJam2019! press enter",
   "prologue: one day you get up and you decide that you are done with the world. press enter",
-  "so you make yourself 3 nuclear bombs and put them in 3 rockets you built from something called a space shuttle. press enter",
-  "you managed to launch 2 of those bombs into orbit, but now the rest of the world heard of your plans and want to stop you",
+  "so you make yourself 3 nuclear bombs and put them in 3 powerful rockets you built from something called a space shuttle. press enter",
+  "you managed to launch 2 of those bombs into orbit, but now the rest of the world heard of your plans and wants to stop you. press enter",
+  "the objective is to get into a circular orbit around the planet that passes between the two blue dots in the sky",
+  "enemies will be attacking you with projectiles from the sky, use the cannon to defend yourself by clicking in the direction you want to shoot. press enter",
+  "controls: click in the direction you want to shoot to use the cannon and destroy the projectiles. press enter",
+  "the lauch cycle lasts 90 seconds before liftoff, defend the rocket! press enter to start the cycle",
+  "orbit does not seem to be correct, try again. press enter",
+  "rocket controls: space to light engines, q to rotate left, a to rotate right",
+  "you shouldn't be seeing this message, please report this incident to me"
   
 };
 int curmes = 0; //current message displayed
 int maxl = 1; //amount of letters from message displayed, for showing text gameboy style
+boolean dispm = false; //is message being diplayed
+boolean nextm = false; //is next message needed?
 
 int stage = 0; //progress of game
 /*
@@ -89,21 +98,20 @@ void setup(){
   earf = loadImage("res/earf.png");
   tower = loadImage("/res/tower.png");
   towerdim = new vec(tower.width, tower.height).scaley(120.0);
-  println(towerdim.mag());
   gun = loadImage("/res/gun.png");
   bullet = loadImage("/res/bullet.png");
   enemy = loadImage("/res/enemy.png");
   
   stage = 1;
   
-  stage = 3;
+  stage = 2;
   
   //stage = 10; //REMOVE, for testing
 }
 
 //cutscene variables
 int cstage = 0;
-int csframe = 0;
+//int csframe = 0;
 object[] boms;
 body simearf;
 
@@ -112,6 +120,16 @@ void draw(){
   background(0);
 
   translate(width / 2, height / 2); //centering view
+  
+  if(stage == 2){
+    dispmess();
+    if(curmes == 3){
+      stage = 3;
+      scale = 1e-4;
+      dispm = true;
+    }
+    return;
+  }
   
   if(stage == 10){
     if(cstage == 0){
@@ -167,6 +185,7 @@ void draw(){
   scale(scale, scale); //aplying zoom
   pushMatrix();
   translate(roc.pos.x, roc.pos.y);
+  if(curmes == 3 || curmes == 4){ translate(0, -planetrad * 2); }
   scale(-1, -1);
   
   if(atmdraw){ drawatm(); }
@@ -260,9 +279,7 @@ void draw(){
   
   popMatrix();
 
-  //drawing rocket
-  roc.render();
-  
+
   textSize(12);
   fill(255);
   scale(1 / scale, 1 / scale);
@@ -273,6 +290,7 @@ void draw(){
   text("predskip: " + predskip, 10, 64);
   text("gundir: " + degrees(gundir), 10, 82);
   
+  //healthbar
   stroke(0);
   noFill();
   strokeWeight(1);
@@ -281,12 +299,39 @@ void draw(){
     fill(0, 255, 0);
     rect(1000, 20, int(map(health, 0, 100, 0, 250)), 30);
   }
-  if(stage == 4){
+  //timer
+  if(stage == 4){ 
     noFill();
     rect(1000, 60, 250, 30);
     fill(0, 0, 255);
     rect(1000, 60, int(map(time, 0, maxt, 0, 250)), 30);
   }
+  if(dispm){
+    pushMatrix();
+    translate(width / 2, height / 2);
+    dispmess();
+    popMatrix();
+    if(curmes < 5){ return; }
+    //println("continueing");
+    if(curmes == 5){
+      scale = 0.61;
+    }else if(curmes == 8 && stage <= 3){
+      play = true;
+      stage = 4;
+      dispm = false;
+    }else if(curmes == 9 && stage <= 4){
+      play = true;
+      dispm = false;
+    }
+    if(curmes == 10){
+      play = true;
+      dispm = false;
+    }
+  }
+  
+  //drawing rocket
+  translate(width / 2, height / 2);
+  roc.render();
   
   if(play){ gameupdate(); } // physics and timing update every frame when not paused
   
@@ -309,6 +354,9 @@ void gameupdate(){
       }else{
         println("timer over");
         stage = 5;
+        dispm = true;
+        curmes = 9;
+        play = false;
         zoomlock = false;
       }
     }
@@ -343,7 +391,7 @@ void gameupdate(){
   }
 }
 
-void checkorbit(){
+boolean checkorbit(){
   predskip = 600;
   roc.predictpath();
   boolean p1 = false;
@@ -361,24 +409,26 @@ void checkorbit(){
   println(p1 && p2);
   println();
   
-  if(p1 && p2){ stage = 10; }
+  return p1 && p2;
 }
 
 void detach(){
   checkorbit(); //DELETE later, for debugging
-  if(attach){
+  if(attach && checkorbit()){
   bom.pos = new vec(roc.pos);
   bom.pos.add(new vec(0, 20).rotate(roc.rotation));
   bom.heading = new vec(roc.heading);
   bom.heading.add(new vec(0, 2).rotate(roc.rotation));
   bom.rotation = new Float(roc.rotation);
   bom.rotheading = roc.rotheading;
-  
   roc.sprite = loadImage("/res/rbodyg_nob.png");
   
-  checkorbit();
-  
+  stage = 10;
   attach = false;
+  }else{
+    dispm = true;
+    play = false;
+    curmes = 8;
   }
 }
 
@@ -386,21 +436,28 @@ void detach(){
 int rot = 0; //rotation status: -1: ccw, 1: cw
 void keyPressed(){
   if(key == ' ' && stage >= 5 && stage != 6){
-    if(stage == 5){ stage = 7; }
+    if(stage == 5){
+      stage = 7;
+      tower = loadImage("/res/towergun.png");
+    }
     roc.thruston = true;
     checkhb();
     predictjob = true;}
-  else if(key == 'e'){
+  else if(key == 'e' && stage >= 7){
     rot = 1;}
-  else if(key == 'q'){
+  else if(key == 'q' && stage >= 7){
     rot = -1;}
   else if(key == 'r' && stage >= 7){
     detach();}
-  else if(key == 'p'){
+  else if(key == 'p' && stage >= 3){
     play = !play;}
-  else if((keyCode == ENTER || keyCode == RETURN) && stage == 3){
-    println("timer started");
-    stage = 4;
+  else if((keyCode == ENTER || keyCode == RETURN)){
+    if(dispm){
+      nextm = true;
+    }else if(stage == 3){
+      println("timer started");
+      stage = 4;
+    }
   }
 }
 
@@ -458,7 +515,7 @@ void drawatm(){
 }
 
 void mousePressed(){
-  if(!launch && stage <= 5){
+  if(!launch && stage >= 4 && stage <= 5){
     buls.add(new bullet(can, gundir));
   }
 }
@@ -484,6 +541,25 @@ void mouseWheel(MouseEvent event) { // for zooming
     }
   }
   //println(scale);
+}
+
+void dispmess(){
+  dispm = true;
+  if(nextm){
+    if(curmes < message.length - 1){ curmes ++; }
+    else{ dispm = false; }
+    maxl = 0;
+    nextm = false;
+  }
+  stroke(255);
+  fill(0);
+  noFill();
+  rect(-width / 2 + 10, height / 2 - 10, width - 20, -300);
+  textSize(32);
+  fill(255);
+  text(message[curmes].substring(0, maxl), -width / 2 + 20, height / 2 - 280, width - 40, 240);
+  if(maxl < message[curmes].length()){ maxl ++; }
+  delay(5);
 }
 
 void checkhb(){
