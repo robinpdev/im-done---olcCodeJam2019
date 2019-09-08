@@ -39,7 +39,7 @@ int health = 100; //health of rocket
 float gundir = 0; //direction of gun
 vec can; //postition of cannon
 final int damage = 30;
-final int maxt = 1 * fps;
+final int maxt = 90 * fps;
 int time = maxt;
 boolean zoomlock = true;
 boolean hb = true; //show healthbar
@@ -49,13 +49,14 @@ String[] message = {
   "welcome to i'm done by inzywinki for olcCodeJam2019! press enter",
   "prologue: one day you get up and you decide that you are done with the world. press enter",
   "so you make yourself 3 nuclear bombs and put them in 3 powerful rockets you built from something called a space shuttle. press enter",
-  "you managed to launch 2 of those bombs into orbit, but now the rest of the world heard of your plans and wants to stop you. press enter",
-  "the objective is to get into a circular orbit around the planet that passes between the two blue dots in the sky",
+  "you managed to launch 2 of those bombs into orbit (green dots), but now the rest of the world heard of your plans and wants to stop you. press enter",
+  "the objective is to get into a circular orbit around the planet that passes through the two blue dots in the sky",
   "enemies will be attacking you with projectiles from the sky, use the cannon to defend yourself by clicking in the direction you want to shoot. press enter",
   "controls: click in the direction you want to shoot to use the cannon and destroy the projectiles. press enter",
   "the lauch cycle lasts 90 seconds before liftoff, defend the rocket! press enter to start the cycle",
   "orbit does not seem to be correct, try again. press enter",
-  "rocket controls: space to light engines, q to rotate left, a to rotate right",
+  "Ready to launch!\nRocket controls: Space to light engines, q to rotate left, a to rotate right.\nuse srollwheel to zoom.\nPRESS R TO RELEAST BOM WHEN IN CORRECT ORBIT",
+  "the rocket was destroyed, your plan failed. press enter",
   "you shouldn't be seeing this message, please report this incident to me"
   
 };
@@ -105,8 +106,7 @@ void setup(){
   stage = 1;
   
   stage = 2;
-  
-  //stage = 10; //REMOVE, for testing
+
 }
 
 //cutscene variables
@@ -114,6 +114,7 @@ int cstage = 0;
 //int csframe = 0;
 object[] boms;
 body simearf;
+boolean freeze = false;;
 
 void draw(){
   frame ++;
@@ -139,8 +140,8 @@ void draw(){
         boms[i].pos = new vec(0, 240 + 20 * i).rotate(360 / (boms.length - 1) * i);
       }
       simearf = new body(new vec(), 10000000);
-      cstage = 1;
-    }
+      cstage = 0;
+    }else if(freeze){ delay(3000); freeze = false;}
     
     image(skybox, -width / 2, -height / 2, width, height);
     if(cstage <= 1){ image(earf, -height / 4, -height / 4, height / 2, height / 2); }
@@ -166,17 +167,41 @@ void draw(){
           fill(255, 216, 107, alpha);
           if(alpha <= -200){
             delay(5000);
-            stage = 11;
+            println("going to ending");
+            stage = 12;
           }
         }
-        
-        
         ellipse(boms[i].pos.x, boms[i].pos.y, rad, rad);
-        
       }
-      
     }
     
+    if(cstage == 0){
+      freeze = true;
+      cstage = 1;
+    }
+    return;
+  }
+  
+  if(stage == 11){
+    image(skybox, -width / 2, -height / 2, width, height);
+    image(earf, -height / 4, -height / 4, height / 2, height / 2);
+    stroke(0);
+    fill(255);
+    strokeWeight(2);
+    textAlign(CENTER);
+    textSize(32);
+    text("the end. but there is another ending where you win though...\ntry again!", 0, 0);
+    return;
+  }
+  
+  if(stage == 12){
+    image(skybox, -width / 2, -height / 2, width, height);
+    stroke(0);
+    fill(255);
+    strokeWeight(2);
+    textAlign(CENTER);
+    textSize(32);
+    text("the end.\nmade by inzywinki / rpdev for olcCodeJam2019", 0, 0);
     return;
   }
   
@@ -323,7 +348,13 @@ void draw(){
       play = true;
       dispm = false;
     }
-    if(curmes == 10){
+    if(curmes == 10 && stage != 6){
+      play = true;
+      dispm = false;
+    }
+    if(curmes == 11 && stage == 6){
+      stage = 11;
+    }else if(curmes == 11){
       play = true;
       dispm = false;
     }
@@ -372,7 +403,11 @@ void gameupdate(){
         String result = ens.get(i).check();
         if(result == "hit" && hb){
           health -= damage;
-          if(health <= 0){ stage = 6; }
+          if(health <= 0){
+            stage = 6;
+            dispm = true;
+            curmes = 10;
+          }
         }
       }
       for(int i = 0; i < buls.size(); i ++){
@@ -553,7 +588,7 @@ void dispmess(){
   }
   stroke(255);
   fill(0);
-  noFill();
+  //noFill();
   rect(-width / 2 + 10, height / 2 - 10, width - 20, -300);
   textSize(32);
   fill(255);

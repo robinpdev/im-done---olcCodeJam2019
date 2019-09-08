@@ -79,9 +79,16 @@ class rocket{
       pushMatrix();
       //scale(1 / scale, 1 / scale);
       
-      fill(255);
+      fill(214, 166, 6);
       noStroke();
-      ellipse(0, 0, 10, 10);
+      rotate(rotation);
+      beginShape();
+      vertex(0, -10);
+      vertex(-10, 10);
+      vertex(10, 10);
+      endShape();
+      ellipse(0, 0, 10, 30);
+      
       popMatrix();
     }
   }
