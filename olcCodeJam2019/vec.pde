@@ -49,6 +49,10 @@ class vec{
     return this.setmag(dy * this.mag() / this.y);
   }
   
+  vec scalex(float dx){
+    return this.setmag(dx * this.mag() / this.x);
+  }
+  
   vec rotate(float rot){
     return new vec(
       x * cos(rot) - y * sin(rot),
