@@ -131,7 +131,7 @@ public void setup(){
   stage = 1;
   stage = 2;
   
-  /*stage = 4;
+  /*stage = 7;
   play = true;
   zoomlock =false;*/
 
@@ -494,6 +494,7 @@ public void detach(){
   bom.rotheading = roc.rotheading;
   roc.sprite = loadImage("/res/rbodyg_nob.png");
   
+  scale = 1;
   dispm = true;
   curmes = 11;
   attach = false;
